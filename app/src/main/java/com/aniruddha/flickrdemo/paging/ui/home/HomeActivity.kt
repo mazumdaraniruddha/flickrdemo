@@ -32,11 +32,16 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import com.aniruddha.flickrdemo.paging.FlickrDemoApp
 import com.aniruddha.flickrdemo.paging.databinding.ActivityHomeBinding
 import com.aniruddha.flickrdemo.paging.ui.ViewModelFactory
+import com.aniruddha.flickrdemo.paging.ui.custom.debounce
+import com.aniruddha.flickrdemo.paging.ui.custom.onTextChanged
 import com.aniruddha.flickrdemo.paging.ui.fullscreen.FullScreenImageActivity
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @ExperimentalCoroutinesApi
@@ -69,11 +74,11 @@ class HomeActivity : AppCompatActivity() {
 
         // add dividers between RecyclerView's row items
         val decoration = DividerItemDecoration(this, DividerItemDecoration.VERTICAL)
-        binding.list.addItemDecoration(decoration)
+        binding.rvPhotos.addItemDecoration(decoration)
 
         initAdapter()
 
-        binding.retryButton.setOnClickListener { adapter.retry() }
+        binding.btnRetry.setOnClickListener { adapter.retry() }
 
         val query = savedInstanceState?.getString(LAST_SEARCH_QUERY) ?: DEFAULT_QUERY
         search(query)
@@ -82,7 +87,7 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putString(LAST_SEARCH_QUERY, binding.searchRepo.text.trim().toString())
+        outState.putString(LAST_SEARCH_QUERY, binding.etSearch.text.trim().toString())
     }
 
     private fun search(query: String) {
@@ -97,15 +102,15 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun initAdapter() {
-        binding.list.adapter = adapter.withLoadStateHeaderAndFooter(
+        binding.rvPhotos.adapter = adapter.withLoadStateHeaderAndFooter(
                 header = PhotosLoadStateAdapter { adapter.retry() },
                 footer = PhotosLoadStateAdapter { adapter.retry() }
         )
 
         adapter.addLoadStateListener {loadState ->
-            binding.list.isVisible = loadState.refresh is LoadState.NotLoading
-            binding.progressBar.isVisible = loadState.refresh is LoadState.Loading
-            binding.retryButton.isVisible = loadState.refresh is LoadState.Error
+            binding.rvPhotos.isVisible = loadState.refresh is LoadState.NotLoading
+            binding.pbProgress.isVisible = loadState.refresh is LoadState.Loading
+            binding.btnRetry.isVisible = loadState.refresh is LoadState.Error
 
             val errorState = loadState.source.append as? LoadState.Error
                     ?: loadState.source.prepend as? LoadState.Error
@@ -123,31 +128,27 @@ class HomeActivity : AppCompatActivity() {
 
     @OptIn(ExperimentalPagingApi::class)
     private fun initSearch(query: String) {
-        binding.searchRepo.setText(query)
+        binding.etSearch.setText(query)
 
-        binding.searchRepo.addTextChangedListener(object: TextWatcher {
-            override fun afterTextChanged(s: Editable?) {
-                updateRepoListFromInput()
-            }
-
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-            }
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-            }
-        })
+        lifecycleScope.launch {
+            binding.etSearch
+                    .onTextChanged()
+                    .debounce(this, 300, TimeUnit.MILLISECONDS)
+                    .consumeEach {
+                        Log.d("SEARCH", "initSearch: $it")
+                        updateRepoListFromInput()
+                    }
+        }
     }
 
     private fun updateRepoListFromInput() {
-        binding.searchRepo.text.trim().let {
-            Log.d(TAG, "TRIGGER USER SEARCH: $it")
-            binding.list.scrollToPosition(0)
+        binding.etSearch.text.trim().let {
+            binding.rvPhotos.scrollToPosition(0)
             search(it.toString())
         }
     }
 
     companion object {
-        private val TAG = HomeActivity::class.java.simpleName
         private const val DEFAULT_QUERY = ""
 
         const val LAST_SEARCH_QUERY: String = "last_search_query"

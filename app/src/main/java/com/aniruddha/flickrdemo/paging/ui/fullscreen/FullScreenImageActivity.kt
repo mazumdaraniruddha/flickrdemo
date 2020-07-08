@@ -50,12 +50,12 @@ class FullScreenImageActivity : AppCompatActivity() {
     }
 
     private fun initRecyclerView() {
-        binding.list.layoutManager = LinearLayoutManager(this,
+        binding.rvPhotosFullscreen.layoutManager = LinearLayoutManager(this,
                 LinearLayoutManager.HORIZONTAL,
                 false)
-        binding.list.adapter = adapter
+        binding.rvPhotosFullscreen.adapter = adapter
 
-        RVPagerSnapHelperListenable().attachToRecyclerView(binding.list, null)
+        RVPagerSnapHelperListenable().attachToRecyclerView(binding.rvPhotosFullscreen, null)
 
         lifecycleScope.launch {
             viewModel.searchRepo()?.collectLatest {
@@ -64,6 +64,6 @@ class FullScreenImageActivity : AppCompatActivity() {
                 })
             }
         }
-        binding.list.scrollToPosition(clickedPosition)
+        binding.rvPhotosFullscreen.scrollToPosition(clickedPosition)
     }
 }

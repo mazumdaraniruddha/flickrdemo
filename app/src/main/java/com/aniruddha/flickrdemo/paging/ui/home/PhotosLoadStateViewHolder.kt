@@ -11,16 +11,16 @@ import com.aniruddha.flickrdemo.paging.databinding.PhotosLoadStateFooterViewItem
 class PhotosLoadStateViewHolder(private val binding: PhotosLoadStateFooterViewItemBinding,
                                 retry: () -> Unit): RecyclerView.ViewHolder(binding.root) {
     init {
-        binding.retryButton.setOnClickListener { retry.invoke() }
+        binding.btnRetryFooter.setOnClickListener { retry.invoke() }
     }
 
     fun bind(loadState: LoadState) {
         if (loadState is LoadState.Error) {
-            binding.errorMsg.text = loadState.error.localizedMessage
+            binding.tvErrorMsg.text = loadState.error.localizedMessage
         }
-        binding.progressBar.isVisible = loadState is LoadState.Loading
-        binding.errorMsg.isVisible = loadState !is LoadState.Loading
-        binding.retryButton.isVisible = loadState !is LoadState.Loading
+        binding.pbFooterProgress.isVisible = loadState is LoadState.Loading
+        binding.tvErrorMsg.isVisible = loadState !is LoadState.Loading
+        binding.btnRetryFooter.isVisible = loadState !is LoadState.Loading
     }
 
     companion object {
