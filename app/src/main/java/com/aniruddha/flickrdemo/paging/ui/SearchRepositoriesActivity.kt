@@ -17,6 +17,9 @@
 package com.aniruddha.flickrdemo.paging.ui
 
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
+import android.util.Log
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
 import android.widget.Toast
@@ -77,7 +80,9 @@ class SearchRepositoriesActivity : AppCompatActivity() {
         searchJob?.cancel()
         searchJob = lifecycleScope.launch {
             viewModel.searchRepo(query).collectLatest {
-                adapter.submitData(it)
+                adapter.submitData(it.map {
+                    it as UiModel.PhotoItem
+                })
             }
         }
     }
@@ -111,39 +116,32 @@ class SearchRepositoriesActivity : AppCompatActivity() {
     private fun initSearch(query: String) {
         binding.searchRepo.setText(query)
 
-        binding.searchRepo.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_GO) {
+        binding.searchRepo.addTextChangedListener(object: TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
                 updateRepoListFromInput()
-                true
-            } else {
-                false
             }
-        }
-        binding.searchRepo.setOnKeyListener { _, keyCode, event ->
-            if (event.action == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
-                updateRepoListFromInput()
-                true
-            } else {
-                false
-            }
-        }
 
-        lifecycleScope.launch {
-            adapter.dataRefreshFlow.collect {
-                binding.list.scrollToPosition(0)
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
             }
-        }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+            }
+        })
     }
 
     private fun updateRepoListFromInput() {
         binding.searchRepo.text.trim().let {
             if (it.isNotEmpty()) {
+                Log.d(TAG, "TRIGGER USER SEARCH: $it")
+                binding.list.scrollToPosition(0)
                 search(it.toString())
             }
         }
     }
 
     companion object {
+        private val TAG = SearchRepositoriesActivity::class.java.simpleName
+
         private const val LAST_SEARCH_QUERY: String = "last_search_query"
         private const val DEFAULT_QUERY = ""
     }

@@ -25,25 +25,24 @@ import java.lang.UnsupportedOperationException
 /**
  * Adapter for the list of repositories.
  */
-class ReposAdapter : PagingDataAdapter<UiModel, androidx.recyclerview.widget.RecyclerView.ViewHolder>(UIMODEL_COMPARATOR) {
+class ReposAdapter : PagingDataAdapter<UiModel.PhotoItem, androidx.recyclerview.widget.RecyclerView.ViewHolder>(UIMODEL_COMPARATOR) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): androidx.recyclerview.widget.RecyclerView.ViewHolder {
         return RepoViewHolder.create(parent)
     }
 
     override fun onBindViewHolder(holder: androidx.recyclerview.widget.RecyclerView.ViewHolder, position: Int) {
-        val uiModel: UiModel.PhotoItem = getItem(position) as UiModel.PhotoItem
+        val uiModel: UiModel.PhotoItem? = getItem(position)
         (holder as RepoViewHolder).bind(uiModel)
     }
 
     companion object {
-        private val UIMODEL_COMPARATOR = object : DiffUtil.ItemCallback<UiModel>() {
-            override fun areItemsTheSame(oldItem: UiModel, newItem: UiModel): Boolean {
-                return (oldItem is UiModel.PhotoItem && newItem is UiModel.PhotoItem &&
-                        oldItem.photo.id == newItem.photo.id)
+        private val UIMODEL_COMPARATOR = object : DiffUtil.ItemCallback<UiModel.PhotoItem>() {
+            override fun areItemsTheSame(oldItem: UiModel.PhotoItem, newItem: UiModel.PhotoItem): Boolean {
+                return oldItem.photo.id == newItem.photo.id
             }
 
-            override fun areContentsTheSame(oldItem: UiModel, newItem: UiModel): Boolean =
+            override fun areContentsTheSame(oldItem: UiModel.PhotoItem, newItem: UiModel.PhotoItem): Boolean =
                     oldItem == newItem
         }
     }

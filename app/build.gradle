@@ -85,4 +85,7 @@ dependencies {
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test:runner:$runnerVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$espressoVersion"
+
+    // Stetho for debugging
+    debugImplementation 'com.facebook.stetho:stetho:1.5.1'
 }

@@ -39,13 +39,10 @@ class GithubRepository(private val service: ApiService,
      * every time we get more data from the network.
      */
     fun getSearchResultStream(query: String): Flow<PagingData<Photo>> {
-        Log.d(TAG, "New query: $query")
+        Log.d(TAG, "NEW QUERY: $query")
+        val pagingSourceFactory = { repoDataBase.photosDao().getReposByName(query) }
 
-        val dbQuery = "%${query.replace(' ', '%')}%"
-        val pagingSourceFactory = { repoDataBase.photosDao().getReposByName(dbQuery) }
-
-        return Pager(config = PagingConfig(
-                pageSize = NETWORK_PAGE_SIZE,
+        return Pager(config = PagingConfig(pageSize = NETWORK_PAGE_SIZE,
                 enablePlaceholders = false),
                 remoteMediator = GithubRemoteMediator(
                         query,
@@ -57,6 +54,6 @@ class GithubRepository(private val service: ApiService,
 
     companion object {
         private val TAG = GithubRepository::class.java.simpleName
-        private const val NETWORK_PAGE_SIZE = 5
+        private const val NETWORK_PAGE_SIZE = 20
     }
 }

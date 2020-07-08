@@ -12,7 +12,8 @@ import com.aniruddha.flickrdemo.paging.model.Repo
 interface RepoDao {
 
     @Query("SELECT * FROM photos_table " +
-            "WHERE title LIKE :queryString")
+            "WHERE query = :queryString " +
+            "ORDER BY indexInResponse ASC")
     fun getReposByName(queryString: String): PagingSource<Int, Photo>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
