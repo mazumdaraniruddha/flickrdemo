@@ -28,6 +28,8 @@ import retrofit2.http.Query
  * Github API communication setup via Retrofit.
  */
 interface ApiService {
+
+
     /**
      * Get repos ordered by stars.
      */
@@ -36,7 +38,7 @@ interface ApiService {
             @Query("text") query: String,
             @Query("page") page: Int,
             @Query("per_page") itemsPerPage: Int,
-            @Query("method") method: String = "flickr.photos.search",
+            @Query("method") method: String,
             @Query("api_key") apiKey: String = API_KEY,
             @Query("format") format: String = "json",
             @Query("nojsoncallback") noJsonCallback: String = "nojsoncallback"
@@ -45,6 +47,9 @@ interface ApiService {
     companion object {
         private const val BASE_URL = "https://api.flickr.com"
         private const val API_KEY = "062a6c0c49e4de1d78497d13a7dbb360"
+
+        const val METHOD_SEARCH_QUERY = "flickr.photos.search"
+        const val METHOD_GET_RECENT = "flickr.photos.getRecent"
 
         fun create(): ApiService {
             val logger = HttpLoggingInterceptor()

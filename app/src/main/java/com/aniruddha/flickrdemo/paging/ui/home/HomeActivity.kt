@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-package com.aniruddha.flickrdemo.paging.ui
+package com.aniruddha.flickrdemo.paging.ui.home
 
+import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
-import android.view.KeyEvent
-import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
@@ -30,33 +29,43 @@ import androidx.lifecycle.lifecycleScope
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadState
 import androidx.recyclerview.widget.DividerItemDecoration
-import com.aniruddha.flickrdemo.paging.Injection
-import com.aniruddha.flickrdemo.paging.databinding.ActivitySearchRepositoriesBinding
+import com.aniruddha.flickrdemo.paging.FlickrDemoApp
+import com.aniruddha.flickrdemo.paging.databinding.ActivityHomeBinding
+import com.aniruddha.flickrdemo.paging.ui.ViewModelFactory
+import com.aniruddha.flickrdemo.paging.ui.fullscreen.FullScreenImageActivity
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @ExperimentalCoroutinesApi
-class SearchRepositoriesActivity : AppCompatActivity() {
+class HomeActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivitySearchRepositoriesBinding
-    private lateinit var viewModel: SearchRepositoriesViewModel
-    private val adapter = ReposAdapter()
+    @Inject
+    lateinit var viewModelFactory: ViewModelFactory
+
+    private lateinit var binding: ActivityHomeBinding
+    private lateinit var viewModel: HomeViewModel
+    private val adapter = PhotosAdapter { photoPosition ->
+        val intent = Intent(this, FullScreenImageActivity::class.java)
+        intent.putExtra(LAST_SEARCH_QUERY, viewModel.currentQueryValue)
+        intent.putExtra(CLICKED_POSITION, photoPosition)
+        startActivity(intent)
+    }
 
     private var searchJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        (application as FlickrDemoApp).appComponent.inject(this)
+
         super.onCreate(savedInstanceState)
-        binding = ActivitySearchRepositoriesBinding.inflate(layoutInflater)
-        val view = binding.root
-        setContentView(view)
+        binding = ActivityHomeBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         // get the view model
-        viewModel = ViewModelProvider(this,
-                Injection.provideViewModelFactory(this))
-                .get(SearchRepositoriesViewModel::class.java)
+        viewModel = ViewModelProvider(this, viewModelFactory)
+                .get(HomeViewModel::class.java)
 
         // add dividers between RecyclerView's row items
         val decoration = DividerItemDecoration(this, DividerItemDecoration.VERTICAL)
@@ -79,7 +88,7 @@ class SearchRepositoriesActivity : AppCompatActivity() {
     private fun search(query: String) {
         searchJob?.cancel()
         searchJob = lifecycleScope.launch {
-            viewModel.searchRepo(query).collectLatest {
+            viewModel.searchRepo(query)?.collectLatest {
                 adapter.submitData(it.map {
                     it as UiModel.PhotoItem
                 })
@@ -89,8 +98,8 @@ class SearchRepositoriesActivity : AppCompatActivity() {
 
     private fun initAdapter() {
         binding.list.adapter = adapter.withLoadStateHeaderAndFooter(
-                header = ReposLoadStateAdapter{adapter.retry()},
-                footer = ReposLoadStateAdapter{adapter.retry()}
+                header = PhotosLoadStateAdapter { adapter.retry() },
+                footer = PhotosLoadStateAdapter { adapter.retry() }
         )
 
         adapter.addLoadStateListener {loadState ->
@@ -131,18 +140,17 @@ class SearchRepositoriesActivity : AppCompatActivity() {
 
     private fun updateRepoListFromInput() {
         binding.searchRepo.text.trim().let {
-            if (it.isNotEmpty()) {
-                Log.d(TAG, "TRIGGER USER SEARCH: $it")
-                binding.list.scrollToPosition(0)
-                search(it.toString())
-            }
+            Log.d(TAG, "TRIGGER USER SEARCH: $it")
+            binding.list.scrollToPosition(0)
+            search(it.toString())
         }
     }
 
     companion object {
-        private val TAG = SearchRepositoriesActivity::class.java.simpleName
-
-        private const val LAST_SEARCH_QUERY: String = "last_search_query"
+        private val TAG = HomeActivity::class.java.simpleName
         private const val DEFAULT_QUERY = ""
+
+        const val LAST_SEARCH_QUERY: String = "last_search_query"
+        const val CLICKED_POSITION: String = "clicked_position"
     }
 }

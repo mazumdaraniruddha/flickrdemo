@@ -14,33 +14,26 @@
  * limitations under the License.
  */
 
-package com.aniruddha.flickrdemo.paging.ui
+package com.aniruddha.flickrdemo.paging.ui.home
 
-import android.content.Intent
-import android.net.Uri
 import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import com.aniruddha.flickrdemo.paging.R
-import com.aniruddha.flickrdemo.paging.api.getImageUrl
-import com.aniruddha.flickrdemo.paging.databinding.RepoViewItemBinding
-import com.aniruddha.flickrdemo.paging.model.Repo
+import com.aniruddha.flickrdemo.paging.databinding.PhotoViewholderItemBinding
+import com.aniruddha.flickrdemo.paging.model.getImageUrl
 import com.bumptech.glide.Glide
 
 /**
  * View Holder for a [Repo] RecyclerView list item.
  */
-class RepoViewHolder(private val binding: RepoViewItemBinding) : RecyclerView.ViewHolder(binding.root) {
-    private var repo: Repo? = null
+class PhotoViewHolder(private val binding: PhotoViewholderItemBinding,
+                      private val onClicked: (position: Int) -> Unit) : RecyclerView.ViewHolder(binding.root) {
+    private var photo: UiModel.PhotoItem? = null
 
     init {
         itemView.setOnClickListener {
-            repo?.url?.let { url ->
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                itemView.context.startActivity(intent)
-            }
+            onClicked.invoke(absoluteAdapterPosition)
         }
     }
 
@@ -48,7 +41,7 @@ class RepoViewHolder(private val binding: RepoViewItemBinding) : RecyclerView.Vi
         if (photo == null) {
             // TODO: Show loading shimmer?
         } else {
-            this.repo = repo
+            this.photo = photo
             // Load Image
             Glide.with(itemView)
                     .load(photo.photo.getImageUrl())
@@ -60,11 +53,11 @@ class RepoViewHolder(private val binding: RepoViewItemBinding) : RecyclerView.Vi
     }
 
     companion object {
-        fun create(parent: ViewGroup): RepoViewHolder {
+        fun create(parent: ViewGroup, onClicked: (position: Int) -> Unit): PhotoViewHolder {
             val view = LayoutInflater.from(parent.context)
-                    .inflate(R.layout.repo_view_item, parent, false)
-            val binding: RepoViewItemBinding = RepoViewItemBinding.bind(view)
-            return RepoViewHolder(binding)
+                    .inflate(R.layout.photo_viewholder_item, parent, false)
+            val binding: PhotoViewholderItemBinding = PhotoViewholderItemBinding.bind(view)
+            return PhotoViewHolder(binding, onClicked)
         }
     }
 }

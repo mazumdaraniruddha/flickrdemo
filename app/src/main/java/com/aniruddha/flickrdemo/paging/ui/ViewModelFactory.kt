@@ -18,17 +18,24 @@ package com.aniruddha.flickrdemo.paging.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.aniruddha.flickrdemo.paging.data.GithubRepository
+import com.aniruddha.flickrdemo.paging.data.FlickrRepository
+import com.aniruddha.flickrdemo.paging.data.IFlickerRepository
+import com.aniruddha.flickrdemo.paging.ui.fullscreen.FullScreenViewModel
+import com.aniruddha.flickrdemo.paging.ui.home.HomeViewModel
+import javax.inject.Inject
 
 /**
  * Factory for ViewModels
  */
-class ViewModelFactory(private val repository: GithubRepository) : ViewModelProvider.Factory {
+class ViewModelFactory @Inject constructor(val repository: IFlickerRepository) : ViewModelProvider.Factory {
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(SearchRepositoriesViewModel::class.java)) {
+        if (modelClass.isAssignableFrom(HomeViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return SearchRepositoriesViewModel(repository) as T
+            return HomeViewModel(repository) as T
+        } else if (modelClass.isAssignableFrom(FullScreenViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return FullScreenViewModel(repository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

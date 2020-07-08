@@ -14,41 +14,41 @@
  * limitations under the License.
  */
 
-package com.aniruddha.flickrdemo.paging.ui
+package com.aniruddha.flickrdemo.paging.ui.home
 
 import androidx.lifecycle.*
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import androidx.paging.insertSeparators
-import com.aniruddha.flickrdemo.paging.api.Photo
-import com.aniruddha.flickrdemo.paging.data.GithubRepository
-import com.aniruddha.flickrdemo.paging.model.Repo
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import com.aniruddha.flickrdemo.paging.model.Photo
+import com.aniruddha.flickrdemo.paging.data.FlickrRepository
+import com.aniruddha.flickrdemo.paging.data.IFlickerRepository
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 
 /**
- * ViewModel for the [SearchRepositoriesActivity] screen.
- * The ViewModel works with the [GithubRepository] to get the data.
+ * ViewModel for the [HomeActivity] screen.
+ * The ViewModel works with the [FlickrRepository] to get the data.
  */
 @ExperimentalCoroutinesApi
-class SearchRepositoriesViewModel(private val repository: GithubRepository) : ViewModel() {
+class HomeViewModel(private val repository: IFlickerRepository) : ViewModel() {
 
-    private var currentQueryValue: String? = null
-    private var currentSearchResult: Flow<PagingData<UiModel>>? = null
+    var currentQueryValue: String? = null
+        private set
 
-    fun searchRepo(queryString: String): Flow<PagingData<UiModel>> {
-        val lastResult = currentSearchResult
+    fun searchRepo(queryString: String): Flow<PagingData<UiModel>>? {
+        val lastResult = repository.getCurrentSearchResults()
         if (queryString == currentQueryValue && lastResult != null) {
             return lastResult
         }
         currentQueryValue = queryString
-        val newResult: Flow<PagingData<UiModel>> = repository.getSearchResultStream(queryString)
-                .map {pagingData -> pagingData.map { photo ->
+        val newResult: Flow<PagingData<UiModel>>? = repository.getSearchResultStream(queryString)
+                ?.map {pagingData -> pagingData.map { photo ->
                     UiModel.PhotoItem(photo) as UiModel
                 }}
-                .cachedIn(viewModelScope)
-        currentSearchResult = newResult
+                ?.cachedIn(viewModelScope)
+        repository.setCurrentSearchResults(newResult)
         return newResult
     }
 }

@@ -5,11 +5,10 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.aniruddha.flickrdemo.paging.api.Photo
-import com.aniruddha.flickrdemo.paging.model.Repo
+import com.aniruddha.flickrdemo.paging.model.Photo
 
 @Dao
-interface RepoDao {
+interface PhotosDao {
 
     @Query("SELECT * FROM photos_table " +
             "WHERE query = :queryString " +

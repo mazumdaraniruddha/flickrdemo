@@ -1,4 +1,4 @@
-package com.aniruddha.flickrdemo.paging.ui
+package com.aniruddha.flickrdemo.paging.ui.home
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -6,10 +6,10 @@ import androidx.core.view.isVisible
 import androidx.paging.LoadState
 import androidx.recyclerview.widget.RecyclerView
 import com.aniruddha.flickrdemo.paging.R
-import com.aniruddha.flickrdemo.paging.databinding.ReposLoadStateFooterViewItemBinding
+import com.aniruddha.flickrdemo.paging.databinding.PhotosLoadStateFooterViewItemBinding
 
-class ReposLoadStateViewHolder(private val binding: ReposLoadStateFooterViewItemBinding,
-                               retry: () -> Unit): RecyclerView.ViewHolder(binding.root) {
+class PhotosLoadStateViewHolder(private val binding: PhotosLoadStateFooterViewItemBinding,
+                                retry: () -> Unit): RecyclerView.ViewHolder(binding.root) {
     init {
         binding.retryButton.setOnClickListener { retry.invoke() }
     }
@@ -24,11 +24,11 @@ class ReposLoadStateViewHolder(private val binding: ReposLoadStateFooterViewItem
     }
 
     companion object {
-        fun create(parent: ViewGroup, retry: () -> Unit): ReposLoadStateViewHolder {
+        fun create(parent: ViewGroup, retry: () -> Unit): PhotosLoadStateViewHolder {
             val view = LayoutInflater.from(parent.context)
-                    .inflate(R.layout.repos_load_state_footer_view_item, parent, false)
-            val binding = ReposLoadStateFooterViewItemBinding.bind(view)
-            return ReposLoadStateViewHolder(binding, retry)
+                    .inflate(R.layout.photos_load_state_footer_view_item, parent, false)
+            val binding = PhotosLoadStateFooterViewItemBinding.bind(view)
+            return PhotosLoadStateViewHolder(binding, retry)
         }
     }
 }

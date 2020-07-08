@@ -1,9 +1,7 @@
-package com.aniruddha.flickrdemo.paging.api
+package com.aniruddha.flickrdemo.paging.model
 
-import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import androidx.room.Query
 import com.google.gson.annotations.SerializedName
 
 @Entity(tableName = "photos_table")

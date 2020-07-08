@@ -21,39 +21,48 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import com.aniruddha.flickrdemo.paging.api.ApiService
-import com.aniruddha.flickrdemo.paging.api.Photo
-import com.aniruddha.flickrdemo.paging.db.RepoDataBase
-import com.aniruddha.flickrdemo.paging.model.Repo
+import com.aniruddha.flickrdemo.paging.model.Photo
+import com.aniruddha.flickrdemo.paging.db.FlickrDataBase
+import com.aniruddha.flickrdemo.paging.ui.home.UiModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
 
 /**
  * Repository class that works with local and remote data sources.
  */
 @ExperimentalCoroutinesApi
-class GithubRepository(private val service: ApiService,
-                       private val repoDataBase: RepoDataBase) {
+class FlickrRepository @Inject constructor(val service: ApiService,
+                                           val flickrDataBase: FlickrDataBase): IFlickerRepository {
+    var currentResults: Flow<PagingData<UiModel>>? = null
+
+    override fun setCurrentSearchResults(result: Flow<PagingData<UiModel>>?) {
+        this.currentResults = result
+    }
+
+    override fun getCurrentSearchResults() = currentResults
 
     /**
      * Search photos whose which might match the query, exposed as a stream of data that will emit
      * every time we get more data from the network.
      */
-    fun getSearchResultStream(query: String): Flow<PagingData<Photo>> {
+    override fun getSearchResultStream(query: String): Flow<PagingData<Photo>> {
         Log.d(TAG, "NEW QUERY: $query")
-        val pagingSourceFactory = { repoDataBase.photosDao().getReposByName(query) }
+        val pagingSourceFactory = { flickrDataBase.photosDao().getReposByName(query) }
 
         return Pager(config = PagingConfig(pageSize = NETWORK_PAGE_SIZE,
                 enablePlaceholders = false),
-                remoteMediator = GithubRemoteMediator(
+                remoteMediator = FlickrRemoteMediator(
                         query,
                         service,
-                        repoDataBase
+                        flickrDataBase
                 ),
                 pagingSourceFactory = pagingSourceFactory).flow
     }
 
     companion object {
-        private val TAG = GithubRepository::class.java.simpleName
+        private val TAG = FlickrRepository::class.java.simpleName
         private const val NETWORK_PAGE_SIZE = 20
     }
 }

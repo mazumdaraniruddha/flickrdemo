@@ -1,5 +1,6 @@
 package com.aniruddha.flickrdemo.paging.api
 
+import com.aniruddha.flickrdemo.paging.model.Photo
 import com.google.gson.annotations.SerializedName
 
 data class Photos(

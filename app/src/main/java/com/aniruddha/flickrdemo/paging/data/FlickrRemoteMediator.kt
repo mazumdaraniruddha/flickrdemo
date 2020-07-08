@@ -1,11 +1,10 @@
 package com.aniruddha.flickrdemo.paging.data
 
-import android.util.Log
 import androidx.paging.*
 import androidx.room.withTransaction
 import com.aniruddha.flickrdemo.paging.api.ApiService
-import com.aniruddha.flickrdemo.paging.api.Photo
-import com.aniruddha.flickrdemo.paging.db.RepoDataBase
+import com.aniruddha.flickrdemo.paging.model.Photo
+import com.aniruddha.flickrdemo.paging.db.FlickrDataBase
 import com.aniruddha.flickrdemo.paging.model.RemoteKeys
 import retrofit2.HttpException
 import java.io.IOException
@@ -15,15 +14,14 @@ import java.io.InvalidObjectException
 private const val STARTING_PAGE_INDEX = 1
 
 @OptIn(ExperimentalPagingApi::class)
-class GithubRemoteMediator(
+class FlickrRemoteMediator(
         private val clientQuery: String,
         private val apiService: ApiService,
-        private val repoDataBase: RepoDataBase
-): RemoteMediator<Int, Photo>() {
+        private val flickrDataBase: FlickrDataBase
+) : RemoteMediator<Int, Photo>() {
 
     override suspend fun load(loadType: LoadType, state: PagingState<Int, Photo>): MediatorResult {
-        Log.d(TAG, "CALL LOAD: QUERY: $clientQuery LOADTYPE: $loadType, PAGE_STATE: ${state.anchorPosition}")
-        val page = when(loadType) {
+        val page = when (loadType) {
             LoadType.REFRESH -> {
                 val remoteKeys = getRemoteKeyClosestToCurrentPosition(state)
                 remoteKeys?.nextIndex?.minus(1) ?: STARTING_PAGE_INDEX
@@ -52,8 +50,16 @@ class GithubRemoteMediator(
             }
         }
         val apiQuery = clientQuery
+        val method = if (apiQuery.isNullOrEmpty())
+            ApiService.METHOD_GET_RECENT
+        else
+            ApiService.METHOD_SEARCH_QUERY
+
         return try {
-            val response = apiService.searchRepos(apiQuery, page, state.config.pageSize)
+            val response = apiService.searchRepos(apiQuery,
+                    page,
+                    state.config.pageSize,
+                    method)
 
             val repos = response.photos?.photo?.map {
                 it.apply {
@@ -62,25 +68,21 @@ class GithubRemoteMediator(
             }
             val endOfPaginationReached = repos?.isEmpty()
 
-            repoDataBase.withTransaction {
+            flickrDataBase.withTransaction {
                 if (loadType == LoadType.REFRESH) {
-                    repoDataBase.photosDao().clearDB()
-                    repoDataBase.remoteKeysDao().clearRemoteKeys()
-                    Log.d(TAG, "CLEAR DB ON REFRESH:")
+                    flickrDataBase.photosDao().clearDB()
+                    flickrDataBase.remoteKeysDao().clearRemoteKeys()
                 }
                 val prevKey = if (page == STARTING_PAGE_INDEX) null else page - 1
                 val nextKey = if (endOfPaginationReached == true) null else page + 1
                 val keys = repos?.map {
-                    val key = RemoteKeys(photoId = it.id, prevIndex = prevKey, nextIndex = nextKey)
-                    Log.d(TAG, "GENERATE REMOTE KEYS: $key, PAGINATION ENDED? $endOfPaginationReached," +
-                            " PAGE: $page")
-                    key
+                    RemoteKeys(photoId = it.id, prevIndex = prevKey, nextIndex = nextKey)
                 }
                 keys?.let {
-                    repoDataBase.remoteKeysDao().insertAll(keys)
+                    flickrDataBase.remoteKeysDao().insertAll(keys)
                 }
                 repos?.let {
-                    repoDataBase.photosDao().insertAll(repos)
+                    flickrDataBase.photosDao().insertAll(repos)
                 }
             }
 
@@ -98,9 +100,7 @@ class GithubRemoteMediator(
         return state.pages.lastOrNull() { it.data.isNotEmpty() }?.data?.lastOrNull()
                 ?.let { photo ->
                     // Get the remote keys of the last item retrieved
-                    val key = repoDataBase.remoteKeysDao().remoteKeysRepoId(photo.id)
-                    Log.d(TAG, "KEY FOR LAST ITEM: $key")
-                    key
+                    flickrDataBase.remoteKeysDao().remoteKeysRepoId(photo.id)
                 }
     }
 
@@ -110,9 +110,7 @@ class GithubRemoteMediator(
         return state.pages.firstOrNull { it.data.isNotEmpty() }?.data?.firstOrNull()
                 ?.let { photo ->
                     // Get the remote keys of the first items retrieved
-                    val key = repoDataBase.remoteKeysDao().remoteKeysRepoId(photo.id)
-                    Log.d(TAG, "KEY FOR FIRST ITEM: $key")
-                    key
+                    flickrDataBase.remoteKeysDao().remoteKeysRepoId(photo.id)
                 }
     }
 
@@ -123,14 +121,12 @@ class GithubRemoteMediator(
         // Get the item closest to the anchor position
         return state.anchorPosition?.let { position ->
             state.closestItemToPosition(position)?.id?.let { photoId ->
-                val key = repoDataBase.remoteKeysDao().remoteKeysRepoId(photoId)
-                Log.d(TAG, "KEY CLOSEST TO CURR POST: $key")
-                key
+                flickrDataBase.remoteKeysDao().remoteKeysRepoId(photoId)
             }
         }
     }
 
     companion object {
-        val TAG = GithubRemoteMediator::class.java.simpleName
+        val TAG = FlickrRemoteMediator::class.java.simpleName
     }
 }
