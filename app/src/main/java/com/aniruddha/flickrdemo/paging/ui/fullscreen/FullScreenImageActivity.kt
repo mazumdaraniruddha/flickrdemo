@@ -16,6 +16,9 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * Actvity to allow browsing the images in Fullscreen and Zoom in and out of images too
+ * */
 class FullScreenImageActivity : AppCompatActivity() {
 
     @Inject

@@ -4,7 +4,11 @@ import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
-
+/***
+ * With help from: https://github.com/d4vidi/VP2RV
+ *
+ * These custom classes help with snapping the recyclerView items correctly
+ * */
 open class PagerSnapScrollListener(val recyclerView: RecyclerView,
                                    val externalListener: RVPagerStateListener?,
                                    maxPages: Int)

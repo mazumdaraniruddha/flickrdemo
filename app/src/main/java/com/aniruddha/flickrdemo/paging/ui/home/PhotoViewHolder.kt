@@ -25,7 +25,7 @@ import com.aniruddha.flickrdemo.paging.model.getImageUrl
 import com.bumptech.glide.Glide
 
 /**
- * View Holder for a [Repo] RecyclerView list item.
+ * View Holder for Photos in the Home screen list.
  */
 class PhotoViewHolder(private val binding: PhotoViewholderItemBinding,
                       private val onClicked: (position: Int) -> Unit) : RecyclerView.ViewHolder(binding.root) {

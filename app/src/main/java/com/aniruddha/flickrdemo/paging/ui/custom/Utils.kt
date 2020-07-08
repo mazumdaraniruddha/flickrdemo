@@ -10,6 +10,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.whileSelect
 import java.util.concurrent.TimeUnit
 
+/**
+ * Extension functions to help with implementing a debounce control over the flow of text
+ * from EditText's text change events.
+ * */
 fun EditText.onTextChanged(): ReceiveChannel<String> =
         Channel<String>(capacity = Channel.UNLIMITED).also { channel ->
             addTextChangedListener(object : TextWatcher {

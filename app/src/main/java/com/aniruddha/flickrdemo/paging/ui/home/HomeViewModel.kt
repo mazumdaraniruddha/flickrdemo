@@ -34,8 +34,7 @@ import javax.inject.Inject
 @ExperimentalCoroutinesApi
 class HomeViewModel(private val repository: IFlickerRepository) : ViewModel() {
 
-    var currentQueryValue: String? = null
-        private set
+    private var currentQueryValue: String? = null
 
     fun searchRepo(queryString: String): Flow<PagingData<UiModel>>? {
         val lastResult = repository.getCurrentSearchResults()

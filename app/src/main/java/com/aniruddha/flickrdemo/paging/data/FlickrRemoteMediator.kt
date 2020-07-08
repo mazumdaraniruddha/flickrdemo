@@ -1,5 +1,6 @@
 package com.aniruddha.flickrdemo.paging.data
 
+import android.net.NetworkInfo
 import androidx.paging.*
 import androidx.room.withTransaction
 import com.aniruddha.flickrdemo.paging.api.ApiService
@@ -10,8 +11,6 @@ import retrofit2.HttpException
 import java.io.IOException
 import java.io.InvalidObjectException
 
-// Start page index as per the API
-private const val STARTING_PAGE_INDEX = 1
 
 @OptIn(ExperimentalPagingApi::class)
 class FlickrRemoteMediator(
@@ -35,12 +34,7 @@ class FlickrRemoteMediator(
             }
             LoadType.PREPEND -> {
                 val remoteKeys = getRemoteKeyForFirstItem(state)
-                if (remoteKeys == null) {
-                    // The LoadType is PREPEND so some data was loaded before,
-                    // so we should have been able to get remote keys
-                    // If the remoteKeys are null, then we're an invalid state and we have a bug
-                    throw InvalidObjectException("Remote key and the prevKey should not be null")
-                }
+                        ?: throw InvalidObjectException("Remote key and the prevKey should not be null")
                 // If the previous key is null, then we can't request more data
                 val prevKey = remoteKeys.prevIndex
                 if (prevKey == null) {
@@ -50,6 +44,9 @@ class FlickrRemoteMediator(
             }
         }
         val apiQuery = clientQuery
+        /**
+         * For empty query, Flickr suggests to fetch the recent photos method instead
+         * */
         val method = if (apiQuery.isNullOrEmpty())
             ApiService.METHOD_GET_RECENT
         else
@@ -63,6 +60,10 @@ class FlickrRemoteMediator(
 
             val repos = response.photos?.photo?.map {
                 it.apply {
+                    /**
+                     * Store the current client query in DB entity, for '=' queries rather than
+                     * 'like'
+                     * */
                     this.query = clientQuery
                 }
             }
@@ -73,8 +74,10 @@ class FlickrRemoteMediator(
                     flickrDataBase.photosDao().clearDB()
                     flickrDataBase.remoteKeysDao().clearRemoteKeys()
                 }
+
                 val prevKey = if (page == STARTING_PAGE_INDEX) null else page - 1
                 val nextKey = if (endOfPaginationReached == true) null else page + 1
+
                 val keys = repos?.map {
                     RemoteKeys(photoId = it.id, prevIndex = prevKey, nextIndex = nextKey)
                 }
@@ -95,8 +98,9 @@ class FlickrRemoteMediator(
     }
 
     private suspend fun getRemoteKeyForLastItem(state: PagingState<Int, Photo>): RemoteKeys? {
-        // Get the last page that was retrieved, that contained items.
-        // From that last page, get the last item
+        /**
+         * Return last item of the last page, or null
+         * */
         return state.pages.lastOrNull() { it.data.isNotEmpty() }?.data?.lastOrNull()
                 ?.let { photo ->
                     // Get the remote keys of the last item retrieved
@@ -105,8 +109,9 @@ class FlickrRemoteMediator(
     }
 
     private suspend fun getRemoteKeyForFirstItem(state: PagingState<Int, Photo>): RemoteKeys? {
-        // Get the first page that was retrieved, that contained items.
-        // From that first page, get the first item
+        /**
+         * Return first item of the first page, or null
+         * */
         return state.pages.firstOrNull { it.data.isNotEmpty() }?.data?.firstOrNull()
                 ?.let { photo ->
                     // Get the remote keys of the first items retrieved
@@ -117,8 +122,9 @@ class FlickrRemoteMediator(
     private suspend fun getRemoteKeyClosestToCurrentPosition(
             state: PagingState<Int, Photo>
     ): RemoteKeys? {
-        // The paging library is trying to load data after the anchor position
-        // Get the item closest to the anchor position
+        /**
+         * Return the item closest to the anchor position
+         * */
         return state.anchorPosition?.let { position ->
             state.closestItemToPosition(position)?.id?.let { photoId ->
                 flickrDataBase.remoteKeysDao().remoteKeysRepoId(photoId)
@@ -127,6 +133,6 @@ class FlickrRemoteMediator(
     }
 
     companion object {
-        val TAG = FlickrRemoteMediator::class.java.simpleName
+        private const val STARTING_PAGE_INDEX = 1
     }
 }

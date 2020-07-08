@@ -35,6 +35,10 @@ import javax.inject.Inject
 @ExperimentalCoroutinesApi
 class FlickrRepository @Inject constructor(val service: ApiService,
                                            val flickrDataBase: FlickrDataBase): IFlickerRepository {
+    /**
+     * Store the last searched snapshot in repo, which may be connected to by another, non-write
+     * client
+     * */
     var currentResults: Flow<PagingData<UiModel>>? = null
 
     override fun setCurrentSearchResults(result: Flow<PagingData<UiModel>>?) {

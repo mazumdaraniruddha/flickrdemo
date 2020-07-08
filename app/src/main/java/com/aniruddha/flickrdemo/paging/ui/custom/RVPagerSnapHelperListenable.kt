@@ -5,6 +5,11 @@ import androidx.annotation.Px
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
+/***
+ * With help from: https://github.com/d4vidi/VP2RV
+ *
+ * These custom classes help with snapping the recyclerView items correctly
+ * */
 data class VisiblePageState(
         var index: Int,
         var view: View,

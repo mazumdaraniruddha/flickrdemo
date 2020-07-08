@@ -16,6 +16,10 @@
 
 package com.aniruddha.flickrdemo.paging.api
 
+import android.content.Context
+import android.content.Context.CONNECTIVITY_SERVICE
+import android.net.ConnectivityManager
+import androidx.core.content.ContextCompat.getSystemService
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import okhttp3.logging.HttpLoggingInterceptor.Level
@@ -24,15 +28,12 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Query
 
+
 /**
- * Github API communication setup via Retrofit.
+ * API communication setup via Retrofit.
  */
 interface ApiService {
 
-
-    /**
-     * Get repos ordered by stars.
-     */
     @GET("/services/rest/")
     suspend fun searchRepos(
             @Query("text") query: String,
@@ -53,7 +54,7 @@ interface ApiService {
 
         fun create(): ApiService {
             val logger = HttpLoggingInterceptor()
-            logger.level = Level.BODY
+            logger.level = Level.BASIC
 
             val client = OkHttpClient.Builder()
                     .addInterceptor(logger)
@@ -64,6 +65,11 @@ interface ApiService {
                     .addConverterFactory(GsonConverterFactory.create())
                     .build()
                     .create(ApiService::class.java)
+        }
+
+        fun isNetworkConnected(context: Context): Boolean {
+            val cm = context.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager?
+            return cm!!.activeNetworkInfo != null && cm.activeNetworkInfo.isConnected
         }
     }
 }

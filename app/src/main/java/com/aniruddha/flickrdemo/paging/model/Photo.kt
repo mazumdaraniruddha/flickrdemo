@@ -15,9 +15,16 @@ data class Photo(
         @SerializedName("secret") val secret: String,
         @SerializedName("server") val server: String,
         @SerializedName("title") val title: String,
+        /**
+         * A transient query value being stored to directly search items against current query from
+         * db instead of 'like' query. Should make queries more performant
+         * */
         var query: String?
 ) {
-    // to be consistent w/ changing backend order, we need to keep a data like this
+    /**
+     * Temp. workaround to solve the ordering issue with room queries and results being served
+     * via PageSource
+     * */
     var indexInResponse: Int = -1
 }
 

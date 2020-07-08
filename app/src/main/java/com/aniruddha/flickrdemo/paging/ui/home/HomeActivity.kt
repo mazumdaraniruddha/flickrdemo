@@ -45,18 +45,18 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @ExperimentalCoroutinesApi
+/**
+ * Landing activity that allows users to search for and browse images using the flickr API
+ * */
 class HomeActivity : AppCompatActivity() {
 
     @Inject
     lateinit var viewModelFactory: ViewModelFactory
-
     private lateinit var binding: ActivityHomeBinding
     private lateinit var viewModel: HomeViewModel
+
     private val adapter = PhotosAdapter { photoPosition ->
-        val intent = Intent(this, FullScreenImageActivity::class.java)
-        intent.putExtra(LAST_SEARCH_QUERY, viewModel.currentQueryValue)
-        intent.putExtra(CLICKED_POSITION, photoPosition)
-        startActivity(intent)
+        handleOnPhotoClicked(photoPosition)
     }
 
     private var searchJob: Job? = null
@@ -146,6 +146,12 @@ class HomeActivity : AppCompatActivity() {
             binding.rvPhotos.scrollToPosition(0)
             search(it.toString())
         }
+    }
+
+    private fun handleOnPhotoClicked(position: Int) {
+        val intent = Intent(this, FullScreenImageActivity::class.java)
+        intent.putExtra(CLICKED_POSITION, position)
+        startActivity(intent)
     }
 
     companion object {

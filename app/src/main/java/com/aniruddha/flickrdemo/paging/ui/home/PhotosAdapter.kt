@@ -21,7 +21,7 @@ import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 
 /**
- * Adapter for the list of repositories.
+ * Adapter for the list of photos.
  */
 class PhotosAdapter(private val onPhotoClicked: (position: Int) -> Unit) : PagingDataAdapter<UiModel.PhotoItem, androidx.recyclerview.widget.RecyclerView.ViewHolder>(UIMODEL_COMPARATOR) {
 
